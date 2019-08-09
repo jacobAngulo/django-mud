@@ -16,6 +16,10 @@ class PlayerViewSet(viewsets.ModelViewSet):
     serializer_class = PlayerSerializer
 
     @action(detail=False, methods=['POST'])
+    def create_player(self, request, pk=None):
+        pass
+
+    @action(detail=False, methods=['POST'])
     def mine(self, request, pk=None):
         token = request.data['token']
         def loop():
