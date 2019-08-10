@@ -3,10 +3,9 @@ from mud.player.serializers import PlayerSerializer
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from threading import Timer
+from .models import Player
 import requests
 import json
-
-# token = 'a59389e4f3a4ed93a20b676b768c7f8e01c00d4b'
 
 
 class PlayerViewSet(viewsets.ModelViewSet):
@@ -15,9 +14,44 @@ class PlayerViewSet(viewsets.ModelViewSet):
     """
     serializer_class = PlayerSerializer
 
+    @action(detail=False, methods=['GET'])
+    def players(self, request, pk=None):
+        queryset = Player.objects.all()
+        serializer = PlayerSerializer(queryset, many=True)
+        return Response(serializer.data)
+
     @action(detail=False, methods=['POST'])
     def create_player(self, request, pk=None):
-        pass
+        token = request.data['token']
+
+        response = requests.post(
+            'https://lambda-treasure-hunt.herokuapp.com/api/adv/status',
+            headers={
+                'Authorization': f'Token {token}'},
+        )
+
+        if response:
+
+            data = response.json()
+            # name = data['name']
+            # gold = data['gold']
+            # strength = data['strength']
+            # encumbrance = data['encumbrance']
+
+            new_player = Player(
+                name=data['name'],
+                token=token,
+                gold=data['gold'],
+                encumbrance=data['encumbrance'],
+                visited='{}',
+                path='[]'
+            )
+
+            new_player.save()
+
+            return Response({'message': 'new player created'})
+        else:
+            pass
 
     @action(detail=False, methods=['POST'])
     def mine(self, request, pk=None):
